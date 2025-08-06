@@ -1,0 +1,30 @@
+{
+    "name": "scrapify-dev/image-tool",
+    "description": "Laravel package for image tools like Compress, Resize, Rotate.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Scrapify\\ImageTools\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "intervention/image": "^3.0",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "spatie/browsershot": "^5.0",
+        "spatie/pdf-to-image": "^1.2",
+        "thiagoalessio/tesseract_ocr": "^2.13",
+        "illuminate/support": "^9.0|^10.0|^11.0|^12.0"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@php -r \"if (shell_exec('npm -v 2>NUL')) { echo 'Installing Puppeteer...'.PHP_EOL; system('npm install puppeteer'); } else { echo 'Node.js not installed. Skipping Puppeteer installation.'.PHP_EOL; }\""
+        ],
+        "post-update-cmd": [
+            "@php -r \"if (shell_exec('npm -v 2>NUL')) { echo 'Updating Puppeteer...'.PHP_EOL; system('npm install puppeteer'); } else { echo 'Node.js not installed. Skipping Puppeteer installation.'.PHP_EOL; }\""
+        ]
+    },
+
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
