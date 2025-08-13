@@ -1,6 +1,6 @@
 📸 Scrapify Image Tools Library
 
-A Laravel package for powerful **image processing** including compression, conversion, cropping, resizing, rotation, HTML-to-image conversion, upscaling, background removal, and OCR (image-to-text).  
+A Laravel package for powerful **image processing** including compression, conversion, cropping, resizing, rotation, HTML-to-image conversion, upscaling, background removal (remove.bg API), and OCR (image-to-text).
 
 This library wraps several industry-standard packages into an easy-to-use Laravel API.
 
@@ -10,24 +10,26 @@ This library wraps several industry-standard packages into an easy-to-use Larave
 
 ```bash
 composer require scrapify-dev/image-tools
-````
+```
 
-### Requirements
+---
 
-* **PHP**: `^8.2`
-* **Laravel**: `^9.0 | ^10.0 | ^11.0 | ^12.0`
-* **Dependencies**:
+## ⚙️ Requirements
+
+* **PHP:** `^8.2`
+* **Laravel:** `^9.0` | `^10.0` | `^11.0` | `^12.0`
+* **Dependencies:**
 
   * `intervention/image:^3.0`
   * `barryvdh/laravel-dompdf:^3.1`
   * `spatie/browsershot:^5.0`
   * `spatie/pdf-to-image:^1.2`
   * `thiagoalessio/tesseract_ocr:^2.13`
-  * `illuminate/support` (as per Laravel version)
+  * `illuminate/support` *(as per Laravel version)*
 
 ---
 
-## 🚀 Quick Start Example
+## 🚀 Quick Start
 
 ```php
 use Scrapify\ImageTools\CompressImage;
@@ -60,9 +62,7 @@ return response()->json([
 
 ## 1️⃣ Compress Image
 
-**Description:** Reduces file size with minimal quality loss. PNGs are auto-converted to JPG for better compression.
-
-**Usage:**
+Reduces file size with minimal quality loss. PNGs are auto-converted to JPG for better compression.
 
 ```php
 use Scrapify\ImageTools\CompressImage;
@@ -71,21 +71,11 @@ $compressor = new CompressImage();
 $result = $compressor->compress($request->file('image_file'));
 ```
 
-**Controller Example:**
-[Click to view full code](#) *(keep your code snippet here)*
-
-**Route:**
-
-```php
-Route::get('/compress-image', [CompressImageController::class, 'compressImageView'])->name('compress.image.view');
-Route::post('/compress-image', [CompressImageController::class, 'compressImage'])->name('compress.image');
-```
-
 ---
 
 ## 2️⃣ Convert Image
 
-**Supported Formats:** `jpg`, `png`, `gif`, `webp`, `avif`, `pdf`
+Supported formats: `jpg`, `png`, `gif`, `webp`, `avif`, `pdf`
 
 ```php
 use Scrapify\ImageTools\ConvertImage;
@@ -94,18 +84,9 @@ $converter = new ConvertImage();
 $result = $converter->convert($request->file('image_file'), 'webp');
 ```
 
-**Route:**
-
-```php
-Route::get('/convert-image', [ConvertImageController::class, 'convertImageView'])->name('convert.image.view');
-Route::post('/convert-image', [ConvertImageController::class, 'convertImage'])->name('convert.image');
-```
-
 ---
 
 ## 3️⃣ Crop Image
-
-**Parameters:** `x`, `y`, `width`, `height`
 
 ```php
 use Scrapify\ImageTools\CropImage;
@@ -145,18 +126,26 @@ $result = $rotator->rotate($file, 90);
 
 ## 6️⃣ HTML to Image
 
-**Dependencies:**
-
-```bash
-npm install puppeteer
-```
+Converts a live HTML page or URL to an image using **ScreenshotLayer API** (no Puppeteer required).
 
 ```php
 use Scrapify\ImageTools\HtmlToImage;
 
 $htmlToImage = new HtmlToImage();
-$result = $htmlToImage->convert('<h1>Hello</h1>', 'png');
+$result = $htmlToImage->convert('https://example.com', 'png');
+
+if ($result['success']) {
+    echo "Image saved at: " . $result['url'];
+}
 ```
+
+**Example Class Implementation:**
+
+```php
+private $apiKey = 'YOUR_SCREENSHOTLAYER_API_KEY';
+```
+
+Make sure to replace with your actual API key.
 
 ---
 
@@ -171,40 +160,60 @@ $result = $upscaler->upscale($file, 2.0);
 
 ---
 
-## 8️⃣ Remove Background
+## 8️⃣ Remove Background (remove.bg API)
 
-**Python Dependencies:**
-
-```bash
-pip install rembg
-```
+Removes the background of an image using the **remove.bg API**.
 
 ```php
 use Scrapify\ImageTools\RemoveBG;
 
 $removeBG = new RemoveBG();
-$result = $removeBG->remove($file);
+$result = $removeBG->remove($request->file('image_file'));
 ```
 
-## 9️⃣ Image to Text
+**Example Class Implementation:**
 
-**Description:**
-Extracts text from an image using OCR, powered by the [`thiagoalessio/tesseract_ocr`](https://github.com/thiagoalessio/tesseract-ocr-for-php) PHP library.
-No need to install Tesseract manually — the library handles it for you.
+```php
+$apiKey = 'YOUR_REMOVE_BG_API_KEY';
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "https://api.remove.bg/v1.0/removebg");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
 
-**Usage:**
+$postFields = [
+    'image_file' => new \CURLFile(
+        $imageFile->getRealPath(), 
+        $imageFile->getMimeType(), 
+        $imageFile->getClientOriginalName()
+    ),
+    'size' => 'auto',
+];
+
+curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "X-Api-Key: $apiKey"
+]);
+
+$result = curl_exec($ch);
+
+if (curl_errno($ch)) {
+    throw new Exception("cURL error: " . curl_error($ch));
+}
+
+curl_close($ch);
+```
+
+---
+
+## 9️⃣ Image to Text (OCR)
+
+Extracts text from an image using [`thiagoalessio/tesseract_ocr`](https://github.com/thiagoalessio/tesseract-ocr-for-php).
+No need to install Tesseract manually — it runs directly from PHP.
 
 ```php
 use Scrapify\ImageTools\ImageToText;
 
 $imageTool = new ImageToText($file);
 $text = $imageTool->process();
-
-// Example output
-return response()->json([
-    'success' => true,
-    'extracted_text' => $text
-]);
 ```
-
 
